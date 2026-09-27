@@ -5,6 +5,7 @@ import org.example.exception.EmployeeNotFoundException;
 import org.example.model.Employee;
 import org.example.notify.NotificationManager;
 import org.example.repository.EmployeeRepository;
+import org.example.validation.EmployeeValidator;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,9 +16,11 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final NotificationManager notificationManager;
+    private final EmployeeValidator employeeValidator;
 
     @Override
     public void addEmployee(Employee employee) {
+        employeeValidator.validate(employee);
         employeeRepository.save(employee);
         notificationManager.notifyAll("New employee added: " + employee.getName());
     }
@@ -39,6 +42,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (employee == null) {
             throw new EmployeeNotFoundException(id);
         }
+
+        employeeValidator.validate(employee);
 
         double currentSalary = employee.getSalary();
         double raise = currentSalary * (percentage / 100);
