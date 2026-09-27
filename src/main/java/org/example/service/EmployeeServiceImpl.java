@@ -1,11 +1,13 @@
 package org.example.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.audit.AuditLogger;
 import org.example.exception.EmployeeNotFoundException;
 import org.example.model.Employee;
 import org.example.notify.NotificationManager;
 import org.example.repository.EmployeeRepository;
 import org.example.validation.EmployeeValidator;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -18,8 +20,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final NotificationManager notificationManager;
     private final EmployeeValidator employeeValidator;
 
+    // Prototype bean injected via ObjectProvider -> a fresh instance each time
+    private final ObjectProvider<AuditLogger> auditLoggerProvider;
+
     @Override
     public void addEmployee(Employee employee) {
+        AuditLogger logger = auditLoggerProvider.getObject();
+        logger.log("Adding employee: " + employee.getName());
+
         employeeValidator.validate(employee);
         employeeRepository.save(employee);
         notificationManager.notifyAll("New employee added: " + employee.getName());
@@ -37,6 +45,9 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public void giveRaise(int id, double percentage) {
+        AuditLogger logger = auditLoggerProvider.getObject();
+        logger.log("Giving raise to employee id=" + id + " by " + percentage + "%");
+
         Employee employee = employeeRepository.findById(id);
 
         if (employee == null) {
