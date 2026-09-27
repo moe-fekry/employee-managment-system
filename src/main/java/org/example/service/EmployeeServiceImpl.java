@@ -3,11 +3,13 @@ package org.example.service;
 import lombok.RequiredArgsConstructor;
 import org.example.audit.AuditLogger;
 import org.example.exception.EmployeeNotFoundException;
+import org.example.exception.InvalidEmployeeException;
 import org.example.model.Employee;
 import org.example.notify.NotificationManager;
 import org.example.repository.EmployeeRepository;
 import org.example.validation.EmployeeValidator;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -19,9 +21,13 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final NotificationManager notificationManager;
     private final EmployeeValidator employeeValidator;
-
-    // Prototype bean injected via ObjectProvider -> a fresh instance each time
     private final ObjectProvider<AuditLogger> auditLoggerProvider;
+
+    @Value("${raise.max-percentage}")
+    private double maxRaisePercentage;
+
+    @Value("${company.currency}")
+    private String currency;
 
     @Override
     public void addEmployee(Employee employee) {
@@ -46,7 +52,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public void giveRaise(int id, double percentage) {
         AuditLogger logger = auditLoggerProvider.getObject();
-        logger.log("Giving raise to employee id=" + id + " by " + percentage + "%");
+        logger.log("Raise request: id=" + id + ", percentage=" + percentage
+                + " (max allowed=" + maxRaisePercentage + "%)");
+
+        if (percentage > maxRaisePercentage) {
+            throw new InvalidEmployeeException(
+                    "Raise percentage " + percentage + "% exceeds maximum allowed "
+                            + maxRaisePercentage + "%");
+        }
 
         Employee employee = employeeRepository.findById(id);
 
@@ -65,8 +78,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         employeeRepository.save(employee);
 
         notificationManager.notifyAll(
-                "Employee " + employee.getName() + " received a " + percentage +
-                        "% raise. New salary: " + newSalary
+                "Employee " + employee.getName() + " received a " + percentage
+                        + "% raise. New salary: " + newSalary + " " + currency
         );
     }
 }
