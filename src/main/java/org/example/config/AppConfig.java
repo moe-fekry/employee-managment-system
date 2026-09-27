@@ -3,6 +3,7 @@ package org.example.config;
 import org.example.repository.EmployeeRepository;
 import org.example.service.EmployeeService;
 import org.example.service.EmployeeServiceImpl;
+import org.example.util.DataInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -11,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @ComponentScan("org.example")
 public class AppConfig {
     @Bean
-    EmployeeService employeeService(EmployeeRepository employeeRepository){
-        return new EmployeeServiceImpl(employeeRepository);
+    public DataInitializer dataInitializer(EmployeeService employeeService) {
+        return new DataInitializer(employeeService);
     }
 }

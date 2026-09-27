@@ -1,11 +1,13 @@
 package org.example.repository;
 
 import org.example.model.Employee;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
 
 import java.util.ArrayList;
 import java.util.List;
 @Repository
+@Profile("dev")
 public class InMemoryEmployeeRepository implements EmployeeRepository {
 
     private final List<Employee> employees = new ArrayList<>();
